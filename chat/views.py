@@ -10,6 +10,7 @@ class ChatGPTView(APIView):
 
         store1_inventory = {
             "store_name": "Deerbrook Mall Store",
+            "store_number": 103,
             "location": "123 Deerbrook Mall, Cityville",
             "inventory": [
                 {
@@ -35,16 +36,17 @@ class ChatGPTView(APIView):
 
         store2_inventory = {
             "store_name": "The Woodlands Mall",
+            "store_number": 104,
             "location": "456 Oak Avenue, Woodlands Town",
             "inventory": [
                 {
                     "product_id": "SHOE001",
                     "product_name": "Men's Running Shoes",
-                    "brand": "Nike",
+                    "brand": "Hoka",
                     "size": "10",
-                    "color": "Black/White",
-                    "price": "$89.99",
-                    "quantity": 25
+                    "color": "Black",
+                    "price": "$189.99",
+                    "quantity": 54
                 },
                 {
                     "product_id": "SHOE002",
@@ -53,7 +55,25 @@ class ChatGPTView(APIView):
                     "size": "8",
                     "color": "Pink/Grey",
                     "price": "$69.99",
-                    "quantity": 15
+                    "quantity": 33
+                },
+                {
+                    "product_id": "SHOE003",
+                    "product_name": "Air Force 1",
+                    "brand": "Nike",
+                    "size": "13",
+                    "color": "White",
+                    "price": "$99.99",
+                    "quantity": 65
+                },
+                {
+                    "product_id": "SHOE004",
+                    "product_name": "Jordans",
+                    "brand": "Nike",
+                    "size": "12",
+                    "color": "Green",
+                    "price": "$129.99",
+                    "quantity": 34
                 }
             ]
         }
@@ -68,6 +88,9 @@ class ChatGPTView(APIView):
 
         user_input = request.data.get('user_message')
 
+        if not user_input:
+            return Response({'error': 'user_message field is required.'}, status=400)
+        
         #mock onboarding doc response (to make this real we'd need to have a path to these documents)
         if 'onboarding' in user_input.lower():
             return Response({'onboarding_document': onboarding_doc})
@@ -79,31 +102,30 @@ class ChatGPTView(APIView):
             return Response({'response': 'You have been successfully clocked in!'})
         if any(phrase in user_input.lower() for phrase in clock_out_phrases):
             return Response({'response': 'You have been successfully clocked out!'})
-        
+
+        #for everything else go through GPT 
         conversation = [
             {"role": "system", "content": "You are a virtual assistant for Finish Line shoe stores Employees."},
+            {"role": "assistant", "content": "You are being used at The Woodlands Mall location."},
             {"role": "assistant", "content": "Hello! How can I assist you with our shoe stores' inventory?"},
             {"role": "assistant", "content": "Deerbrook Mall Store Inventory:"},
             {"role": "assistant", "content": store1},
             {"role": "assistant", "content": "The Woodlands Mall Inventory:"},
             {"role": "assistant", "content": store2},
+            {"role": "assistant", "content": "You are employeed at The Woodlands Mall Location."},
+            {"role": "assistant", "content": "This is how you open the store according to the employee handbook..."},
+            {"role": "assistant", "content": "This is how you close the store according to the employee handbook..."},
             {"role": "user", "content": user_input},
         ]
 
-        if not user_input:
-            return Response({'error': 'user_message field is required.'}, status=400)
-
         try:
-            # Call to OpenAI's API
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=conversation
             )
 
-            # Extracting the response content
             openai_response = response.choices[0].message.content
 
-            # Return the response
             return Response({'response': openai_response})
 
         except Exception as e:
