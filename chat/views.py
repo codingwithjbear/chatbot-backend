@@ -1,12 +1,20 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from openai import OpenAI
+from docx import Document
+import os
 import json
 
 client = OpenAI()
 
 class ChatGPTView(APIView):
     def post(self, request, *args, **kwargs):
+
+        handbook_path = os.path.join('chat', 'static','docs', 'handbook.docx')
+
+        with open(handbook_path, "rb") as file:
+                document = Document(file)
+                doc_text = "\n".join([paragraph.text for paragraph in document.paragraphs])
 
         store1_inventory = {
             "store_name": "Deerbrook Mall Store",
@@ -115,6 +123,8 @@ class ChatGPTView(APIView):
             {"role": "assistant", "content": "You are employeed at The Woodlands Mall Location."},
             {"role": "assistant", "content": "This is how you open the store according to the employee handbook..."},
             {"role": "assistant", "content": "This is how you close the store according to the employee handbook..."},
+            {"role": "assistant", "content" : "Employee Handbook:"},
+            {"role": "assistant", "content" : doc_text },
             {"role": "user", "content": user_input},
         ]
 
